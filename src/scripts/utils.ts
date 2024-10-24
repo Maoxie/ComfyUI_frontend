@@ -1,16 +1,15 @@
-// @ts-strict-ignore
 import { api } from './api'
 import type { ComfyApp } from './app'
 import { $el } from './ui'
 
 // Simple date formatter
 const parts = {
-  d: (d) => d.getDate(),
-  M: (d) => d.getMonth() + 1,
-  h: (d) => d.getHours(),
-  m: (d) => d.getMinutes(),
-  s: (d) => d.getSeconds()
-}
+  d: (d: Date) => d.getDate(),
+  M: (d: Date) => d.getMonth() + 1,
+  h: (d: Date) => d.getHours(),
+  m: (d: Date) => d.getMinutes(),
+  s: (d: Date) => d.getSeconds()
+} as const
 const format =
   Object.keys(parts)
     .map((k) => k + k + '?')
@@ -21,14 +20,15 @@ function formatDate(text: string, date: Date) {
     if (text === 'yy') return (date.getFullYear() + '').substring(2)
     if (text === 'yyyy') return date.getFullYear().toString()
     if (text[0] in parts) {
-      const p = parts[text[0]](date)
+      const key = text[0] as keyof typeof parts
+      const p = parts[key](date)
       return (p + '').padStart(text.length, '0')
     }
     return text
   })
 }
 
-export function clone(obj) {
+export function clone(obj: any) {
   try {
     if (typeof structuredClone !== 'undefined') {
       return structuredClone(obj)
@@ -114,7 +114,7 @@ export async function addStylesheet(
  * @param { string } filename
  * @param { Blob } blob
  */
-export function downloadBlob(filename, blob) {
+export function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob)
   const a = $el('a', {
     href: url,
@@ -140,7 +140,7 @@ export function prop<T>(
     name: string
   ) => void
 ): T {
-  let currentValue
+  let currentValue: T
   Object.defineProperty(target, name, {
     get() {
       return currentValue
