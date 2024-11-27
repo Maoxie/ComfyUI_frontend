@@ -10,9 +10,9 @@ const zNodeType = z.string()
 const zQueueIndex = z.number()
 const zPromptId = z.string()
 const zResultItem = z.object({
-  filename: z.string(),
+  filename: z.string().optional(),
   subfolder: z.string().optional(),
-  type: z.string()
+  type: z.string().optional()
 })
 export type ResultItem = z.infer<typeof zResultItem>
 const zOutputs = z
@@ -47,7 +47,8 @@ const zExecutingWsMessage = z.object({
 })
 
 const zExecutedWsMessage = zExecutingWsMessage.extend({
-  outputs: zOutputs
+  output: zOutputs,
+  merge: z.boolean().optional()
 })
 
 const zExecutionWsMessageBase = z.object({
@@ -76,14 +77,6 @@ const zExecutionErrorWsMessage = zExecutionWsMessageBase.extend({
   current_outputs: z.any()
 })
 
-const zDownloadModelStatus = z.object({
-  status: z.string(),
-  progress_percentage: z.number(),
-  message: z.string(),
-  download_path: z.string(),
-  already_existed: z.boolean()
-})
-
 export type StatusWsMessageStatus = z.infer<typeof zStatusWsMessageStatus>
 export type StatusWsMessage = z.infer<typeof zStatusWsMessage>
 export type ProgressWsMessage = z.infer<typeof zProgressWsMessage>
@@ -98,8 +91,6 @@ export type ExecutionInterruptedWsMessage = z.infer<
   typeof zExecutionInterruptedWsMessage
 >
 export type ExecutionErrorWsMessage = z.infer<typeof zExecutionErrorWsMessage>
-
-export type DownloadModelStatus = z.infer<typeof zDownloadModelStatus>
 // End of ws messages
 
 const zPromptInputItem = z.object({
@@ -253,7 +244,9 @@ const zBaseInputSpecValue = z
     forceInput: z.boolean().optional(),
     lazy: z.boolean().optional(),
     rawLink: z.boolean().optional(),
-    tooltip: z.string().optional()
+    tooltip: z.string().optional(),
+    hidden: z.boolean().optional(),
+    advanced: z.boolean().optional()
   })
   .passthrough()
 
@@ -510,7 +503,10 @@ const zSettings = z.record(z.any()).and(
       'Comfy.Keybinding.UnsetBindings': z.array(zKeybinding),
       'Comfy.Keybinding.NewBindings': z.array(zKeybinding),
       'Comfy.Extension.Disabled': z.array(z.string()),
-      'Comfy.Settings.ExtensionPanel': z.boolean()
+      'Comfy.Settings.ExtensionPanel': z.boolean(),
+      'Comfy.LinkRenderMode': z.number(),
+      'Comfy.Node.AutoSnapLinkToSlot': z.boolean(),
+      'Comfy.Node.SnapHighlightsNode': z.boolean()
     })
     .optional()
 )

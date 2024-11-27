@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import { comfyPageFixture as test } from './ComfyPage'
+import { comfyPageFixture as test } from './fixtures/ComfyPage'
 
 test.describe('Node Interaction', () => {
   test('Can enter prompt', async ({ comfyPage }) => {
@@ -73,6 +73,8 @@ test.describe('Node Interaction', () => {
       await comfyPage.disconnectEdge()
       await expect(comfyPage.canvas).toHaveScreenshot('disconnected-edge.png')
       await comfyPage.connectEdge()
+      // Move mouse to empty area to avoid slot highlight.
+      await comfyPage.moveMouseToEmptyArea()
       // Litegraph renders edge with a slight offset.
       await expect(comfyPage.canvas).toHaveScreenshot('default.png', {
         maxDiffPixels: 50
@@ -113,6 +115,24 @@ test.describe('Node Interaction', () => {
       )
       await comfyPage.page.keyboard.up('Shift')
       await expect(comfyPage.canvas).toHaveScreenshot('copied-link.png')
+    })
+
+    test('Auto snap&highlight when dragging link over node', async ({
+      comfyPage
+    }) => {
+      await comfyPage.setSetting('Comfy.Node.AutoSnapLinkToSlot', true)
+      await comfyPage.setSetting('Comfy.Node.SnapHighlightsNode', true)
+
+      await comfyPage.page.mouse.move(
+        comfyPage.clipTextEncodeNode1InputSlot.x,
+        comfyPage.clipTextEncodeNode1InputSlot.y
+      )
+      await comfyPage.page.mouse.down()
+      await comfyPage.page.mouse.move(
+        comfyPage.clipTextEncodeNode2InputSlot.x,
+        comfyPage.clipTextEncodeNode2InputSlot.y
+      )
+      await expect(comfyPage.canvas).toHaveScreenshot('snapped-highlighted.png')
     })
   })
 
@@ -491,10 +511,6 @@ test.describe('Load workflow', () => {
 test.describe('Load duplicate workflow', () => {
   test.beforeEach(async ({ comfyPage }) => {
     await comfyPage.setSetting('Comfy.UseNewMenu', 'Top')
-  })
-
-  test.afterEach(async ({ comfyPage }) => {
-    await comfyPage.setSetting('Comfy.UseNewMenu', 'Disabled')
   })
 
   test('A workflow can be loaded multiple times in a row', async ({

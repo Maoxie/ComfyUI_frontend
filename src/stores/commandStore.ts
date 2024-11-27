@@ -1,4 +1,3 @@
-// @ts-strict-ignore
 import { app } from '@/scripts/app'
 import { api } from '@/scripts/api'
 import { defineStore } from 'pinia'
@@ -18,7 +17,10 @@ import { useTitleEditorStore } from './graphStore'
 import { useErrorHandling } from '@/hooks/errorHooks'
 import { useWorkflowStore } from './workflowStore'
 import { type KeybindingImpl, useKeybindingStore } from './keybindingStore'
+import { useBottomPanelStore } from './workspace/bottomPanelStore'
 import { LGraphNode } from '@comfyorg/litegraph'
+import { useWorkspaceStore } from './workspaceStore'
+import { workflowService } from '@/services/workflowService'
 
 export interface ComfyCommand {
   id: string
@@ -122,7 +124,7 @@ export const useCommandStore = defineStore('command', () => {
         app.workflowManager.setWorkflow(null)
         app.clean()
         app.graph.clear()
-        app.workflowManager.activeWorkflow.track()
+        app.workflowManager.activeWorkflow?.track()
       }
     },
     {
@@ -148,7 +150,7 @@ export const useCommandStore = defineStore('command', () => {
       label: 'Save Workflow',
       menubarLabel: 'Save',
       function: () => {
-        app.workflowManager.activeWorkflow.save()
+        app.workflowManager.activeWorkflow?.save()
       }
     },
     {
@@ -157,7 +159,7 @@ export const useCommandStore = defineStore('command', () => {
       label: 'Save Workflow As',
       menubarLabel: 'Save As',
       function: () => {
-        app.workflowManager.activeWorkflow.save(true)
+        app.workflowManager.activeWorkflow?.save(true)
       }
     },
     {
@@ -166,7 +168,7 @@ export const useCommandStore = defineStore('command', () => {
       label: 'Export Workflow',
       menubarLabel: 'Export',
       function: () => {
-        app.menu.exportWorkflow('workflow', 'workflow')
+        workflowService.exportWorkflow('workflow', 'workflow')
       }
     },
     {
@@ -175,7 +177,7 @@ export const useCommandStore = defineStore('command', () => {
       label: 'Export Workflow (API Format)',
       menubarLabel: 'Export (API)',
       function: () => {
-        app.menu.exportWorkflow('workflow_api', 'output')
+        workflowService.exportWorkflow('workflow_api', 'output')
       }
     },
     {
@@ -222,7 +224,7 @@ export const useCommandStore = defineStore('command', () => {
       icon: 'pi pi-clipboard',
       label: 'Clipspace',
       function: () => {
-        app['openClipspace']?.()
+        app.openClipspace()
       }
     },
     {
@@ -273,10 +275,10 @@ export const useCommandStore = defineStore('command', () => {
       label: 'Zoom In',
       function: () => {
         const ds = app.canvas.ds
-        ds.changeScale(ds.scale * 1.1, [
-          ds.element.width / 2,
-          ds.element.height / 2
-        ])
+        ds.changeScale(
+          ds.scale * 1.1,
+          ds.element ? [ds.element.width / 2, ds.element.height / 2] : undefined
+        )
         app.canvas.setDirty(true, true)
       }
     },
@@ -286,10 +288,10 @@ export const useCommandStore = defineStore('command', () => {
       label: 'Zoom Out',
       function: () => {
         const ds = app.canvas.ds
-        ds.changeScale(ds.scale / 1.1, [
-          ds.element.width / 2,
-          ds.element.height / 2
-        ])
+        ds.changeScale(
+          ds.scale / 1.1,
+          ds.element ? [ds.element.width / 2, ds.element.height / 2] : undefined
+        )
         app.canvas.setDirty(true, true)
       }
     },
@@ -458,6 +460,24 @@ export const useCommandStore = defineStore('command', () => {
           }
         }
       })()
+    },
+    {
+      id: 'Workspace.ToggleBottomPanel',
+      icon: 'pi pi-list',
+      label: 'Toggle Bottom Panel',
+      versionAdded: '1.3.22',
+      function: () => {
+        useBottomPanelStore().toggleBottomPanel()
+      }
+    },
+    {
+      id: 'Workspace.ToggleFocusMode',
+      icon: 'pi pi-eye',
+      label: 'Toggle Focus Mode',
+      versionAdded: '1.3.27',
+      function: () => {
+        useWorkspaceStore().toggleFocusMode()
+      }
     }
   ]
 

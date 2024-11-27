@@ -3,6 +3,8 @@ import { ComfyApp } from '../scripts/app'
 import type { ComfyNodeDef } from '@/types/apiTypes'
 import type { Keybinding } from '@/types/keyBindingTypes'
 import type { ComfyCommand } from '@/stores/commandStore'
+import { SettingParams } from './settingTypes'
+import type { BottomPanelExtension } from './extensionTypes'
 
 export type Widgets = Record<
   string,
@@ -26,6 +28,18 @@ export type MenuCommandGroup = {
   commands: string[]
 }
 
+export type MissingNodeType =
+  | string
+  // Primarily used by group nodes.
+  | {
+      type: string
+      hint?: string
+      action?: {
+        text: string
+        callback: () => void
+      }
+    }
+
 export interface ComfyExtension {
   /**
    * The name of the extension
@@ -43,6 +57,14 @@ export interface ComfyExtension {
    * Menu commands to add to the menu bar
    */
   menuCommands?: MenuCommandGroup[]
+  /**
+   * Settings to add to the settings menu
+   */
+  settings?: SettingParams[]
+  /**
+   * Bottom panel tabs to add to the bottom panel
+   */
+  bottomPanelTabs?: BottomPanelExtension[]
   /**
    * Allows any initialisation, e.g. loading resources. Called after the canvas is created but before nodes are added
    * @param app The ComfyUI app instance
@@ -110,6 +132,24 @@ export interface ComfyExtension {
    * @param app The ComfyUI app instance
    */
   nodeCreated?(node: LGraphNode, app: ComfyApp): void
+
+  /**
+   * Allows the extension to modify the graph data before it is configured.
+   * @param graphData The graph data
+   * @param missingNodeTypes The missing node types
+   */
+  beforeConfigureGraph?(
+    graphData: ComfyWorkflowJSON,
+    missingNodeTypes: MissingNodeType[]
+  ): Promise<void> | void
+
+  /**
+   * Allows the extension to run code after the graph is configured.
+   * @param missingNodeTypes The missing node types
+   */
+  afterConfigureGraph?(
+    missingNodeTypes: MissingNodeType[]
+  ): Promise<void> | void
 
   [key: string]: any
 }
